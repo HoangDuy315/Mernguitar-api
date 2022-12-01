@@ -3,8 +3,12 @@ const express = require("express");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-
+const RouteProduct = require("./route/routeProduct")
 const app = express();
+const cors = require("cors");
+
+app.use(cors())
+
 
 dotenv.config({ path: "./config.env" });
 require("./db/conn");
@@ -35,6 +39,7 @@ app.post("/signup", async (req, res) => {
       username: username,
       email: email,
       password: password,
+      role: 'Admin',
     });
 
     // Save method is used to create user
@@ -82,11 +87,44 @@ app.get("/logout", (req, res) => {
   res.clearCookie("jwt", { path: "/" });
   res.status(200).send("User logged out");
 });
+app.get('/getUser', async(req, res)=> {
+  try{
+    const data = await Users.find()
+    res.json(data)
+  }
+  catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+app.use("/product", RouteProduct);
 
 // authentication
 app.get("/auth", authenticate, (req, res) => {});
 
+app.get("/getoneUser", async(req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    if (!token) {
+      res.status(401).send("No token");
+    } else {
+      const verifyToken = jwt.verify(token, process.env.SECRET_KEY);
+      const rootUser = await Users.findOne({
+        _id: verifyToken._id,
+        "tokens.token": token,
+      });
+      if (!rootUser) {
+        res.status(401).send("User not found");
+      } else {
+        res.json(rootUser)
+      }
+    }
+  } catch (error) {
+    res.status(401).send("Error");
+    console.log(error);
+  }
+})
 // run server - npm run dev
 app.listen(port, () => {
-  console.log("Server is Started");
+  console.log("Server is Started " + port);
 });
