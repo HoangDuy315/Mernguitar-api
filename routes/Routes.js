@@ -7,28 +7,30 @@ const router = express.Router()
 const ModelGuitar = require('../models/modelGuitar');
 const ModelUser = require('../models/modelUser');
 
-//Post Method
-router.post('/post', async (req, res) => {
+//Post Method Add Product
+router.post('/addProduct', async (req, res) => {
     const data = new ModelGuitar({
-        code: req.body.code,
         name: req.body.name,
-        lecture: req.body.lecture,
-        dateStart: req.body.dateStart,
-        maxStudent: req.body.maxStudent,
-        currentStudent: [],
+        quantity: req.body.quantity || 0,
+        price: req.body.price || 0,
+        sale: 0,
+        type: req.body.type || "Đang cập nhật !",
+        color: [req.body.type] || [],
+        urlImg: req.body.urlImg,
+
     })
 
     try {
         const dataToSave = await data.save();
         
-        res.json({status: 200 , message: "Success!"});
+        res.json({status: 200 , message: "Sản Phẩm Đã Được Thêm !"});
     }
     catch (error) {
         res.status(400).json({message: error.message})
     }
 })
 //Get all Guitar
-router.get('/get', async (req, res) => {
+router.get('/getallproduct', async (req, res) => {
     try{
         const data = await ModelGuitar.find();
         res.json(data)
@@ -39,7 +41,7 @@ router.get('/get', async (req, res) => {
 })
 
 //Get by ID one guitar
-router.get('/getOne/:id', async (req, res) => {
+router.get('/getoneproduct/:id', async (req, res) => {
     try{
         const data = await ModelGuitar.findById(req.params.id);
         res.json(data)
@@ -50,12 +52,11 @@ router.get('/getOne/:id', async (req, res) => {
 })
 
 //Update by ID update guitar
-router.patch('/update/:id', async (req, res) => {
+router.put('/updateProduct/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const updatedData = req.body;
         const options = { new: true };
-
         const result = await ModelGuitar.findByIdAndUpdate(
             id, updatedData, options
         )
@@ -68,7 +69,7 @@ router.patch('/update/:id', async (req, res) => {
 })
 
 //Update by ID update User
-router.patch('/updateUser/:id', async (req, res) => {
+router.put('/updateUser/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const updatedData = req.body;
@@ -77,15 +78,14 @@ router.patch('/updateUser/:id', async (req, res) => {
         const result = await ModelUser.findByIdAndUpdate(
             id, updatedData, options
         )
-
         res.send({status: 200, message: "Update successfully"})
     }
     catch (error) {
         res.json({status: 400, message: error.message })
     }
 })
-//Delete by ID delete user
-router.delete('/deleteCourse/:id', async (req, res) => {
+//Delete by ID delete product
+router.delete('/deleteproduct/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const data = await ModelGuitar.findByIdAndDelete(id)
@@ -98,7 +98,7 @@ router.delete('/deleteCourse/:id', async (req, res) => {
 })
 
 //Delete by ID delete user
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/deleteuser/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const data = await ModelUser.findByIdAndDelete(id)
@@ -123,9 +123,11 @@ router.post('/signup', async (req, res) => {
         name: req.body.name,
         password: passwordHash,
         email: req.body.email,
+        address: req.body.address || '',
         role: "Customer",
+        urlImg: req.body.url || '',
         dateCreate: `${date.getHours()}:${date.getMinutes()} ${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`,
-        numberCourse: []
+        Cart: []
 
     })  
     console.log(data2)
@@ -169,23 +171,37 @@ router.post('/login', async (req, res) => {
     console.log(req.body);
     const data = await ModelUser.findOne({name: req.body.name});
 
-    console.log(data)
-    if (data && bcrypt.compare(req.body.password , data.password)){
-        try {
-            res.send(JSON.stringify({"status": 200, id: data._id ,  "error": null, "response": "SuccessLogin"}));
+    console.log(data);
+
+    if(data){
+
+        const match = await bcrypt.compare(req.body.password , data.password)
+
+        if (match){
+            try {
+    
+                res.send(JSON.stringify({"status": 200, id: data._id ,  "error": null, "response": "SuccessLogin"}));
+            }
+            catch (error) {
+                res.status(400).json({message: error.message})
+            }
         }
-        catch (error) {
-            res.status(400).json({message: error.message})
+        else {
+            res.send(JSON.stringify({"status": 400, "error": null, "response": "tai hoac mat khau sai"}));
         }
-    }else {
-        res.send(JSON.stringify({"status": 401, "error": null, "response": "tai hoac mat khau sai"}));
+       
     }
+    else {
+        res.send(JSON.stringify({"status": 400, "error": null, "response": "tai hoac mat khau sai"}));
+    }
+    
 })
 
-
-router.post('/getOneUser', async (req, res) => {
+// get one User by ID
+router.get('/getoneuser/:id', async (req, res) => {
     try{
-        const data = await ModelUser.findById(req.body);
+        const user = req.params.id
+        const data = await ModelUser.findById({_id: user}, {password: 0});
         res.json(data)
     }
     catch(error){
@@ -193,13 +209,15 @@ router.post('/getOneUser', async (req, res) => {
     }
 })
 
+
+//get all userS
 router.get('/getUser', async (req, res) => {
     try{
-        const data = await ModelUser.find();
+        const data = await ModelUser.find({}, {password: 0}).exec();
         res.json(data)
     }
     catch(error){
-        res.status(500).json({message: error.message})
+        res.status(400).json({message: error.message})
     }
 })
 module.exports = router;

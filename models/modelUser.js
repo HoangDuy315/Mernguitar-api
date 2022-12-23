@@ -9,6 +9,9 @@ const dataSchema = new mongoose.Schema({
         required: true,
         type: String
     },
+    address: {
+        type: String
+    },
     email: {
         required: true,
         type: String
@@ -22,9 +25,10 @@ const dataSchema = new mongoose.Schema({
     dateCreate: {
         type: String
     },
-    numberCourses: {
-        type: [Object]
-    }
+    Cart: {
+        type: [[Object, Number]]
+    },
+
 
 })
 

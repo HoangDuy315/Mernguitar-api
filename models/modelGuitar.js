@@ -1,30 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const dataSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-      },
-      title: {
-        type: String,
-        required: true,
-      },
-      price: {
-        type: Number,
-        required: true,
-      },
-      desc: {
-        type: String,
-      },
-      imgUrl: {
-        type: String,
-      },
-      pro: {
-        type: [String]
-      }
+  name: {
+    type: String,
+    required: true,
+  },
+  quantity: {
+    type: Number
+  },
+  sale: {
+    type: Number,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  type: {
+    type: String,
+  },
+  color: {
+    type: [String],
+  },
+  urlImg: {
+    type: String,
+  },
+});
 
-
-
-})
-
-module.exports = mongoose.model('DataGuitar', dataSchema)
+module.exports = mongoose.model("DataGuitar", dataSchema);
